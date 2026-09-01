@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+
+<title>ValiMercado - Controle de Validade</title>
+
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f7fb;
+    color:#172033;
+}
+
+button,
+input{
+    font:inherit;
+}
+
+.app{
+    width:100%;
+    max-width:720px;
+    margin:auto;
+    padding:16px 14px 40px;
+}
+
+header{
+    padding:8px 2px 18px;
+}
+
+h1{
+    font-size:26px;
+    font-weight:800;
+    margin-bottom:5px;
+}
+
+.subtitle{
+    color:#64748b;
+    font-size:14px;
+}
+
+.counter{
+    margin-top:16px;
+    padding:20px;
+    border-radius:22px;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+    box-shadow:0 8px 28px rgba(15,23,42,.10);
+}
+
+.counter small{
+    display:block;
+    color:#cbd5e1;
+    font-size:12px;
+    margin-bottom:6px;
+    font-weight:bold;
+}
+
+.counter strong{
+    font-size:38px;
+}
+
+.counter span{
+    font-size:13px;
+    color:#cbd5e1;
+}
+
+.panel{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:17px;
+    margin-top:14px;
+    box-shadow:0 8px 28px rgba(15,23,42,.08);
+}
+
+.panel h2{
+    font-size:18px;
+    margin-bottom:15px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.full{
+    grid-column:1/-1;
+}
+
+label{
+    font-size:13px;
+    font-weight:bold;
+}
+
+input{
+    width:100%;
+    padding:14px 12px;
+    border:1px solid #cbd5e1;
+    border-radius:13px;
+    outline:none;
+    background:white;
+}
+
+input:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+.scan-row{
+    display:flex;
+    gap:9px;
+}
+
+.scan-row input{
+    min-width:0;
+}
+
+.btn{
+    border:0;
+    border-radius:13px;
+    padding:13px 15px;
+    font-weight:bold;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+
+.btn:active{
+    transform:scale(.98);
+}
+
+.btn-primary{
+    background:#2563eb;
+    color:white;
+}
+
+.btn-primary:hover{
+    background:#1d4ed8;
+}
+
+.btn-outline{
+    background:#eff6ff;
+    color:#1d4ed8;
+    border:1px solid #bfdbfe;
+}
+
+.btn-danger{
+    background:#fee2e2;
+    color:#b91c1c;
+}
+
+.btn-promo{
+    background:#f1f5f9;
+    color:#334155;
+}
+
+.full-btn{
+    width:100%;
+    margin-top:12px;
+    min-height:52px;
+}
+
+.hint{
+    font-size:11px;
+    color:#64748b;
+}
+
+.list-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.list-head h2{
+    margin:0;
+}
+
+.products{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.empty{
+    text-align:center;
+    color:#64748b;
+    padding:28px 10px;
+    border:1px dashed #cbd5e1;
+    border-radius:15px;
+}
+
+.product{
+    border-radius:17px;
+    padding:15px;
+    border:1px solid;
+}
+
+.product.urgent{
+    background:#fee2e2;
+    border-color:#fecaca;
+}
+
+.product.warning{
+    background:#fef3c7;
+    border-color:#fde68a;
+}
+
+.product.safe{
+    background:#dcfce7;
+    border-color:#bbf7d0;
+}
+
+.product-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+}
+
+.name{
+    font-size:17px;
+    font-weight:800;
+    word-break:break-word;
+}
+
+.badge{
+    font-size:11px;
+    font-weight:900;
+    padding:6px 9px;
+    border-radius:999px;
+    white-space:nowrap;
+}
+
+.urgent .badge{
+    background:#fecaca;
+    color:#991b1b;
+}
+
+.warning .badge{
+    background:#fde68a;
+    color:#92400e;
+}
+
+.safe .badge{
+    background:#bbf7d0;
+    color:#166534;
+}
+
+.details{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin:12px 0;
+    color:#475569;
+    font-size:13px;
+}
+
+.days{
+    font-weight:800;
+}
+
+.urgent .days{
+    color:#b91c1c;
+}
+
+.warning .days{
+    color:#a16207;
+}
+
+.safe .days{
+    color:#166534;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+}
+
+.actions .btn{
+    flex:1;
+    padding:10px 8px;
+    font-size:13px;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(2,6,23,.75);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+}
+
+.modal.open{
+    display:flex;
+}
+
+.modal-box{
+    width:min(720px,100%);
+    background:white;
+    border-radius:22px 22px 0 0;
+    padding:15px 15px 25px;
+}
+
+.modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.modal-head strong{
+    font-size:18px;
+}
+
+.close{
+    border:0;
+    background:#f1f5f9;
+    border-radius:50%;
+    width:40px;
+    height:40px;
+    font-size:22px;
+    cursor:pointer;
+}
+
+#scannerVideo{
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    background:#020617;
+    border-radius:16px;
+}
+
+.scanner-help{
+    text-align:center;
+    color:#64748b;
+    font-size:13px;
+    margin-top:9px;
+}
+
+.danger-note{
+    font-size:12px;
+    color:#991b1b;
+    background:#fff1f2;
+    border-radius:10px;
+    padding:9px;
+    margin-top:10px;
+}
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translate(-50%,120px);
+    background:#0f172a;
+    color:white;
+    padding:12px 16px;
+    border-radius:13px;
+    z-index:100;
+    max-width:calc(100% - 28px);
+    text-align:center;
+    font-size:13px;
+    transition:.25s;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+}
+
+@media(max-width:470px){
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .full{
+        grid-column:auto;
+    }
+
+    .scan-row{
+        flex-direction:column;
+    }
+
+    .scan-row .btn{
+        width:100%;
+    }
+
+    .details{
+        grid-template-columns:1fr;
+    }
+
+    .list-head{
+        align-items:flex-start;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+<h1>🛒 ValiMercado</h1>
+
+<p class="subtitle">
+Controle de validade rápido para o estoque
+</p>
+
+<div class="counter">
+
+<small>
+PRODUTOS EM ALERTA URGENTE
+</small>
+
+<strong id="urgentCount">0</strong>
+
+<span>
+vencendo em até 3 dias ou já vencidos
+</span>
+
+</div>
+
+</header>
+
+
+<section class="panel">
+
+<h2>➕ Cadastro rápido</h2>
+
+<div class="grid">
+
+<div class="field full">
+
+<label for="name">
+Nome do produto
+</label>
+
+<div class="scan-row">
+
+<input
+id="name"
+type="text"
+placeholder="Ex.: Leite Integral 1L"
+autocomplete="off"
+>
+
+<button
+class="btn btn-outline"
+id="scanBtn"
+type="button"
+>
+📷 Escanear Produto
+</button>
+
+</div>
+
+<div class="hint">
+Escaneie o código de barras. Se o produto não for encontrado, digite o nome manualmente.
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label for="expiry">
+Data de validade
+</label>
+
+<input
+id="expiry"
+type="date"
+>
+
+</div>
+
+
+<div class="field">
+
+<label for="quantity">
+Quantidade de unidades
+</label>
+
+<input
+id="quantity"
+type="number"
+min="1"
+step="1"
+value="1"
+inputmode="numeric"
+>
+
+</div>
+
+
+<div class="field full">
+
+<label for="barcode">
+Código de barras
+</label>
+
+<input
+id="barcode"
+type="text"
+inputmode="numeric"
+placeholder="Será preenchido pelo scanner"
+>
+
+</div>
+
+</div>
+
+
+<button
+class="btn btn-primary full-btn"
+id="addBtn"
+type="button"
+>
+Salvar produto no estoque
+</button>
+
+</section>
+
+
+<section class="panel">
+
+<div class="list-head">
+
+<h2>
+📋 Estoque por validade
+</h2>
+
+<button
+class="btn btn-danger"
+id="clearBtn"
+type="button"
+>
+Limpar tudo
+</button>
+
+</div>
+
+<div
+id="products"
+class="products"
+>
+</div>
+
+</section>
+
+</div>
+
+
+<!-- MODAL DO SCANNER -->
+
+<div
+class="modal"
+id="scannerModal"
+aria-hidden="true"
+>
+
+<div class="modal-box">
+
+<div class="modal-head">
+
+<strong>
+📷 Escanear código de barras
+</strong>
+
+<button
+class="close"
+id="closeScanner"
+type="button"
+>
+×
+</button>
+
+</div>
+
+<video
+id="scannerVideo"
+playsinline
+muted
+></video>
+
+<p class="scanner-help">
+Aponte a câmera para o código de barras da embalagem.
+</p>
+
+<div class="danger-note">
+A câmera do navegador exige HTTPS e permissão para utilizar a câmera.
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="toast"
+class="toast"
+></div>
+
+
+<script>
+
+"use strict";
+
+
+/* =========================
+   CONFIGURAÇÃO
+========================= */
+
+const STORAGE_KEY =
+"valimercado_produtos_v1";
+
+let products =
+loadProducts();
+
+let scannerControls = null;
+
+let scannerRunning = false;
+
+
+/* =========================
+   ELEMENTOS
+========================= */
+
+const $ = id =>
+document.getElementById(id);
+
+const nameInput =
+$("name");
+
+const expiryInput =
+$("expiry");
+
+const quantityInput =
+$("quantity");
+
+const barcodeInput =
+$("barcode");
+
+
+/* =========================
+   LOCAL STORAGE
+========================= */
+
+function loadProducts(){
+
+    try{
+
+        const data =
+        JSON.parse(
+            localStorage.getItem(STORAGE_KEY) || "[]"
+        );
+
+        return Array.isArray(data)
+            ? data
+            : [];
+
+    }catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+function saveProducts(){
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(products)
+    );
+
+}
+
+
+/* =========================
+   DATAS
+========================= */
+
+function localDateOnly(
+    date = new Date()
+){
+
+    return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+    );
+
+}
+
+
+function parseDateInput(value){
+
+    if(!value)
+        return null;
+
+    const [
+        year,
+        month,
+        day
+    ] =
+    value
+    .split("-")
+    .map(Number);
+
+    return new Date(
+        year,
+        month - 1,
+        day
+    );
+
+}
+
+
+function daysUntil(value){
+
+    const target =
+    parseDateInput(value);
+
+    if(!target)
+        return Infinity;
+
+    const today =
+    localDateOnly();
+
+    return Math.round(
+        (
+            target - today
+        ) / 86400000
+    );
+
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function statusFor(days){
+
+    if(days <= 3){
+
+        return {
+
+            cls:"urgent",
+
+            label:
+            days < 0
+            ? "JÁ VENCIDO"
+            : days === 0
+            ? "VENCE HOJE"
+            : "URGENTE"
+
+        };
+
+    }
+
+
+    if(days <= 7){
+
+        return {
+
+            cls:"warning",
+
+            label:"ATENÇÃO"
+
+        };
+
+    }
+
+
+    return {
+
+        cls:"safe",
+
+        label:"SEGURO"
+
+    };
+
+}
+
+
+/* =========================
+   TEXTO DA DATA
+========================= */
+
+function formatDate(value){
+
+    const date =
+    parseDateInput(value);
+
+    if(!date)
+        return "—";
+
+    return date.toLocaleDateString(
+        "pt-BR"
+    );
+
+}
+
+
+function daysText(days){
+
+    if(days < 0){
+
+        return `Vencido há ${
+            Math.abs(days)
+        } ${
+            Math.abs(days) === 1
+            ? "dia"
+            : "dias"
+        }`;
+
+    }
+
+
+    if(days === 0){
+
+        return "Vence hoje";
+
+    }
+
+
+    return `Vence em ${days} ${
+        days === 1
+        ? "dia"
+        : "dias"
+    }`;
+
+}
+
+
+/* =========================
+   TELA PRINCIPAL
+========================= */
+
+function render(){
+
+    products.sort(
+        (a,b) => {
+
+            const dateA =
+            parseDateInput(a.expiry);
+
+            const dateB =
+            parseDateInput(b.expiry);
+
+            const difference =
+            dateA - dateB;
+
+            return difference ||
+            a.createdAt - b.createdAt;
+
+        }
+    );
+
+
+    const urgent =
+    products.filter(
+        product =>
+        daysUntil(product.expiry) <= 3
+    ).length;
+
+
+    $("urgentCount")
+    .textContent = urgent;
+
+
+    const container =
+    $("products");
+
+
+    if(!products.length){
+
+        container.innerHTML = `
+        <div class="empty">
+
+        Nenhum produto cadastrado ainda.
+
+        <br><br>
+
+        Use o cadastro acima para começar.
+
+        </div>
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+    products.map(product => {
+
+        const days =
+        daysUntil(product.expiry);
+
+        const status =
+        statusFor(days);
+
+
+        return `
+
+        <article
+        class="product ${status.cls}"
+        >
+
+            <div class="product-top">
+
+                <div class="name">
+
+                    ${escapeHtml(
+                        product.name
+                    )}
+
+                </div>
+
+                <div class="badge">
+
+                    ${status.label}
+
+                </div>
+
+            </div>
+
+
+            <div class="details">
+
+                <div>
+
+                    📅 Validade:
+
+                    <b>
+                    ${formatDate(
+                        product.expiry
+                    )}
+                    </b>
+
+                </div>
+
+
+                <div>
+
+                    📦 Quantidade:
+
+                    <b>
+                    ${product.quantity}
+                    </b>
+
+                </div>
+
+
+                <div class="days">
+
+                    ${daysText(days)}
+
+                </div>
+
+
+                <div>
+
+                    ${
+                    product.barcode
+
+                    ?
+
+                    "🏷️ Código: "
+                    +
+                    escapeHtml(
+                        product.barcode
+                    )
+
+                    :
+
+                    "🏷️ Sem código"
+                    }
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+
+                class="btn btn-promo"
+
+                data-action="promo"
+
+                data-id="${product.id}"
+
+                >
+
+                🏷️ Promoção
+
+                </button>
+
+
+                <button
+
+                class="btn btn-danger"
+
+                data-action="remove"
+
+                data-id="${product.id}"
+
+                >
+
+                ✓ Dar baixa
+
+                </button>
+
+            </div>
+
+        </article>
+
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================
+   SEGURANÇA DO HTML
+========================= */
+
+function escapeHtml(str){
+
+    return String(str)
+    .replace(
+        /[&<>"']/g,
+        character => ({
+
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+
+        }[character])
+    );
+
+}
+
+
+/* =========================
+   LIMPAR FORMULÁRIO
+========================= */
+
+function resetForm(){
+
+    nameInput.value = "";
+
+    expiryInput.value = "";
+
+    quantityInput.value = "1";
+
+    barcodeInput.value = "";
+
+}
+
+
+/* =========================
+   CADASTRAR PRODUTO
+========================= */
+
+function addProduct(){
+
+    const name =
+    nameInput.value.trim();
+
+    const expiry =
+    expiryInput.value;
+
+    const quantity =
+    Number(quantityInput.value);
+
+    const barcode =
+    barcodeInput.value.trim();
+
+
+    if(!name){
+
+        toast(
+            "Digite o nome do produto."
+        );
+
+        return;
+
+    }
+
+
+    if(!expiry){
+
+        toast(
+            "Selecione a data de validade."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !Number.isInteger(quantity)
+        ||
+        quantity < 1
+    ){
+
+        toast(
+            "Informe uma quantidade válida."
+        );
+
+        return;
+
+    }
+
+
+    products.push({
+
+        id:
+        (
+            crypto.randomUUID
+            ?
+            crypto.randomUUID()
+            :
+            String(Date.now())
+            +
+            Math.random()
+        ),
+
+        name:name,
+
+        expiry:expiry,
+
+        quantity:quantity,
+
+        barcode:barcode,
+
+        createdAt:Date.now()
+
+    });
+
+
+    saveProducts();
+
+    render();
+
+    resetForm();
+
+    toast(
+        "Produto salvo no estoque!"
+    );
+
+}
+
+
+/* =========================
+   BUSCAR PRODUTO PELO CÓDIGO
+   OPEN FOOD FACTS
+========================= */
+
+async function lookupProduct(
+    barcode
+){
+
+    try{
+
+        const response =
+        await fetch(
+            "https://world.openfoodfacts.org/api/v2/product/"
+            +
+            encodeURIComponent(barcode)
+            +
+            ".json",
+            {
+                headers:{
+                    "Accept":
+                    "application/json"
+                }
+            }
+        );
+
+
+        if(!response.ok)
+            return null;
+
+
+        const data =
+        await response.json();
+
+
+        if(
+            data.status !== 1
+            ||
+            !data.product
+        ){
+
+            return null;
+
+        }
+
+
+        const product =
+        data.product;
+
+
+        return (
+
+            product.product_name_pt
+
+            ||
+
+            product.product_name
+
+            ||
+
+            product.product_name_en
+
+            ||
+
+            null
+
+        );
+
+    }
+    catch(error){
+
+        return null;
+
+    }
+
+}
+
+
+/* =========================
+   ABRIR SCANNER
+========================= */
+
+async function startScanner(){
+
+    if(!window.ZXingBrowser){
+
+        toast(
+            "O scanner não carregou. Verifique sua internet."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !window.isSecureContext
+        &&
+        location.hostname !== "localhost"
+    ){
+
+        toast(
+            "A câmera precisa de HTTPS. Use o GitHub Pages."
+        );
+
+        return;
+
+    }
+
+
+    $("scannerModal")
+    .classList
+    .add("open");
+
+
+    $("scannerModal")
+    .setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    scannerRunning = true;
+
+
+    try{
+
+        const reader =
+        new ZXingBrowser
+        .BrowserMultiFormatReader();
+
+
+        scannerControls =
+        await reader.decodeFromConstraints(
+
+            {
+
+                video:{
+
+                    facingMode:{
+                        ideal:"environment"
+                    },
+
+                    width:{
+                        ideal:1280
+                    },
+
+                    height:{
+                        ideal:720
+                    }
+
+                },
+
+                audio:false
+
+            },
+
+            $("scannerVideo"),
+
+            async (
+                result,
+                error,
+                controls
+            ) => {
+
+                if(
+                    !scannerRunning
+                    ||
+                    !result
+                ){
+
+                    return;
+
+                }
+
+
+                scannerRunning =
+                false;
+
+
+                if(controls)
+                    controls.stop();
+
+
+                scannerControls =
+                null;
+
+
+                const code =
+                result.getText();
+
+
+                barcodeInput.value =
+                code;
+
+
+                toast(
+                    "Código lido. Procurando produto..."
+                );
+
+
+                const foundName =
+                await lookupProduct(code);
+
+
+                if(foundName){
+
+                    nameInput.value =
+                    foundName;
+
+
+                    toast(
+                        "Produto encontrado automaticamente!"
+                    );
+
+                }
+                else{
+
+                    nameInput.focus();
+
+
+                    toast(
+                        "Código lido. Digite o nome manualmente."
+                    );
+
+                }
+
+
+                closeScanner();
+
+            }
+
+        );
+
+    }
+    catch(error){
+
+        scannerRunning =
+        false;
+
+        closeScanner();
+
+
+        if(
+            error
+            &&
+            (
+                error.name ===
+                "NotAllowedError"
+
+                ||
+
+                String(error)
+                .toLowerCase()
+                .includes("permission")
+            )
+        ){
+
+            toast(
+                "Permita o acesso à câmera no navegador."
+            );
+
+        }
+        else{
+
+            toast(
+                "Não foi possível abrir a câmera."
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   FECHAR SCANNER
+========================= */
+
+function closeScanner(){
+
+    scannerRunning =
+    false;
+
+
+    try{
+
+        if(scannerControls)
+            scannerControls.stop();
+
+    }
+    catch(error){}
+
+
+    scannerControls =
+    null;
+
+
+    const video =
+    $("scannerVideo");
+
+
+    try{
+
+        if(video.srcObject){
+
+            video.srcObject
